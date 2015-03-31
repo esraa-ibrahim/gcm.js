@@ -22,7 +22,6 @@ public class AppStateListener implements ActivityTransitionListener  {
 	public static boolean oneActivityIsResumed = false;
 	public static boolean appWasNotRunning = false;
 
-	@Override
 	public void onActivityTransition (boolean state) {
 		oneActivityIsResumed = !state;
 		

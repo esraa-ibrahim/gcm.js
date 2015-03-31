@@ -25,7 +25,13 @@ import org.appcelerator.kroll.KrollRuntime;
 import org.appcelerator.kroll.annotations.Kroll;
 import org.appcelerator.titanium.TiApplication;
 
+import android.R;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
+import android.support.v4.app.NotificationCompat;
 
 import com.google.android.gcm.GCMRegistrar;
 
@@ -308,5 +314,60 @@ public class GcmjsModule extends KrollModule {
 
 			logd("Data event should have been fired.");
 		}
+	}
+	
+	/**
+	 * Create big style notification
+	 * @param ntfId : counter for number of unread notification
+	 * @param title : notification title
+	 * @param message : notification body message
+	 * @param tickerText : notification text that appears on notification area when closed
+	 * @param icon : icon that will appear beside the notification
+	 * @param notificationId : unique notification id
+	 */
+	@Kroll.method
+	public void createBigNotificationStyle(int ntfId, String title,
+			String message, String tickerText, int icon, int notificationId) {
+		Intent intent = new Intent();
+		intent.setAction("action" + ntfId);
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+				| Intent.FLAG_ACTIVITY_SINGLE_TOP);
+		
+		intent.setClassName(TiApplication.getInstance().getApplicationContext()
+				.getPackageName(), TiApplication
+				.getInstance()
+				.getPackageManager()
+				.getLaunchIntentForPackage(
+						TiApplication.getInstance().getPackageName())
+				.getComponent().getClassName());
+		intent.addCategory(Intent.CATEGORY_LAUNCHER);
+		intent.putExtra("ntfId", ntfId);
+		PendingIntent pintent = PendingIntent.getActivity(TiApplication
+				.getInstance().getApplicationContext(), 0, intent, 0);
+
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(
+				TiApplication.getInstance().getApplicationContext())
+				.setContentIntent(pintent)
+				.setSmallIcon(icon)
+				.setContentTitle(title)
+				.setContentText(message)
+				.setTicker(tickerText)
+				.setAutoCancel(true)
+				.setNumber(ntfId)
+				// .setDefaults(Notification.DEFAULT_ALL) // requires VIBRATE
+				// permission
+				/*
+				 * Sets the big view "big text" style and supplies the text (the
+				 * user's reminder message) that will be displayed in the detail
+				 * area of the expanded notification. These calls are ignored by
+				 * the support library for pre-4.1 devices.
+				 */
+				.setStyle(
+						new NotificationCompat.BigTextStyle().bigText(message));
+		NotificationManager mNotificationManager = (NotificationManager) TiApplication
+				.getInstance().getApplicationContext()
+				.getSystemService(Context.NOTIFICATION_SERVICE);
+		// notificationId allows you to update the notification later on.
+		mNotificationManager.notify(notificationId, builder.build());
 	}
 }
